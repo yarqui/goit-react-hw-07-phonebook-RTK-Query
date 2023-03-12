@@ -1,36 +1,66 @@
 import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
-import { deleteContact } from 'redux/contactsSlice';
-import { selectContacts, selectFilterValue } from 'redux/selectors';
+import { selectFilteredContacts, selectFilterValue } from 'redux/selectors';
+import {
+  useDeleteContactMutation,
+  useGetContactsQuery,
+} from 'redux/contactsSlice';
 import { DeleteButton, ContactItem } from './ContactList.styled';
 
-const getVisibleContacts = (contacts, filterValue) => {
-  return contacts.filter(contact =>
-    contact.name.toLowerCase().includes(filterValue)
-  );
-};
-
 const ContactList = () => {
-  const dispatch = useDispatch();
-  const contacts = useSelector(selectContacts);
-  const filterValue = useSelector(selectFilterValue);
+  const { data: contacts, error, isLoading } = useGetContactsQuery();
+  const [deleteContact, { isLoading: isDeleting }] = useDeleteContactMutation();
+  const filter = useSelector(selectFilterValue);
+  const visibleContacts = selectFilteredContacts(contacts, filter);
 
-  const visibleContacts = getVisibleContacts(contacts, filterValue);
+  const showLoading = isLoading && !error;
+  const showError = error && !isLoading;
 
-  return visibleContacts.map(({ id, name, number }) => (
-    <ContactItem key={id}>
-      {name}: {number}
-      <DeleteButton
-        id={id}
-        type="button"
-        onClick={() => {
-          dispatch(deleteContact(id));
-        }}
-      >
-        Delete
-      </DeleteButton>
-    </ContactItem>
-  ));
+  const handleDeleteContact = async id => {
+    try {
+      deleteContact(id);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return (
+    <>
+      {showLoading && <p>Loading...</p>}
+      {showError && <p>{error.message}</p>}
+
+      {contacts.map(({ id, name, number }) => (
+        <ContactItem key={id}>
+          {name}: {number}
+          <DeleteButton
+            id={id}
+            type="button"
+            disabled={isDeleting}
+            onClick={() => {
+              handleDeleteContact(id);
+            }}
+          >
+            Delete
+          </DeleteButton>
+        </ContactItem>
+      ))}
+      {/* {contacts &&
+        contacts.map(({ id, name, number }) => (
+          <ContactItem key={id}>
+            {name}: {number}
+            <DeleteButton
+              id={id}
+              type="button"
+              disabled={isDeleting}
+              onClick={() => {
+                handleDeleteContact(id);
+              }}
+            >
+              Delete
+            </DeleteButton>
+          </ContactItem>
+        ))} */}
+    </>
+  );
 };
 
 export default ContactList;

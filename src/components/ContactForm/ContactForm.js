@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { nanoid } from 'nanoid';
 import { Form, InputLabel, InputField, AddButton } from './ContactForm.styled';
-import { addContact } from 'redux/contactsSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { selectContacts } from 'redux/selectors';
+import {
+  useAddContactMutation,
+  useGetContactsQuery,
+} from 'redux/contactsSlice';
 import { toast } from 'react-toastify';
 
 const ContactForm = () => {
@@ -13,8 +14,16 @@ const ContactForm = () => {
   const nameInputId = useMemo(() => nanoid(4), []);
   const numberInputId = useMemo(() => nanoid(4), []);
 
-  const contacts = useSelector(selectContacts);
-  const dispatch = useDispatch();
+  const { data: contacts } = useGetContactsQuery();
+  const [addContact, { isLoading }] = useAddContactMutation();
+
+  const handleAddContact = async ({ name, number }) => {
+    try {
+      await addContact({ name, number });
+    } catch (error) {
+      console.log('error:', error);
+    }
+  };
 
   const resetForm = () => {
     setName('');
@@ -52,7 +61,7 @@ const ContactForm = () => {
       return;
     }
 
-    dispatch(addContact(name, number));
+    handleAddContact({ name, number });
 
     resetForm();
   };
@@ -86,7 +95,9 @@ const ContactForm = () => {
         onChange={handleChange}
         value={number}
       />
-      <AddButton type="submit">Add contact</AddButton>
+      <AddButton type="submit" disabled={isLoading}>
+        {isLoading ? 'Adding contact...' : 'Add contact'}
+      </AddButton>
     </Form>
   );
 };
