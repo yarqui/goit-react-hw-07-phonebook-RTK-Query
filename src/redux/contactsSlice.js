@@ -1,12 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const contactsInitialState = {
-  contacts: {
-    items: [],
-    isLoading: false,
-    error: null,
-  },
-};
+// const contactsInitialState = {
+//   contacts: {
+//     items: [],
+//     isLoading: false,
+//     error: null,
+//   },
+// };
 
 export const contactsSlice = createApi({
   reducerPath: 'contactsApi',
